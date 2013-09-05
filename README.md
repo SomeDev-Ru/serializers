@@ -8,7 +8,10 @@ Serialize data without model
 
 
 ###Registered
-`serializers.register_serializer('cursorjson','serializers.cursorjson')`
+```
+from django.core import serializers
+serializers.register_serializer('cursorjson','serializers.cursorjson')
+```
 
 ###Uses
 Example serialize data from PostGIS
@@ -22,4 +25,24 @@ serializers.serialize('cursorjson', cursor, json=['geom'], stream=response)
 ```
 
 ###Params
-json - list of fields wich contains json object
+json - list of fields which contains json object
+
+
+FeatureCollection
+-------------
+Serialize geofields from GeoQuerySet, list, tuple..
+
+###Registered
+```
+from django.core import serializers
+serializers.register_serializer('featurecollection','serializers.featurecollection')
+```
+
+###Uses
+Example serialize data from geomodel
+```
+...
+response = HttpResponse(content_type='application/json')
+serializers.serialize('cursorjson', City.objects.all(), fields=['point','poly'], stream=response)
+...
+```
