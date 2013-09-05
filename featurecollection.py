@@ -20,9 +20,10 @@ class Serializer(jsonSerializer):
         self._current = None
 
     def end_serialization(self):
+        self.stream.write("]")
         for k,v in self.options.pop('kv',{}).items():
             if not self.first:
                 self.stream.write(",")
             self.stream.write('"%s":%s' % (k,json.dumps(v)))
             self.first = False
-        self.stream.write("]}")
+        self.stream.write("}")

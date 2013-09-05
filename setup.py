@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='serializers',
-    version='0.2',
+    version='0.2.1',
     package_dir={'serializers': ''},
     packages=['serializers'],
     author='Alexander Malev',
