@@ -52,8 +52,11 @@ serializers.serialize('geojson', City.objects.all(), fields=['point','poly'], st
 ```
 
 ###Params
-fields - list of geometry fields (for serilize geometry only)
+fields - list of geometry fields (for serialize geometry only)
+
 geometry - geometry field into feature
+
 geometry_collection - list of geometry fields (multigeometry for feature)
-properties - list of filelds (properties for feature)
+
+properties - list of fields (properties for feature)
 
