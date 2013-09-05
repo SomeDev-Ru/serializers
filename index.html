@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>Serializers by SomeDev-Ru</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Serializers</h1>
+        <h2></h2>
+
+        <section id="downloads">
+          <a href="https://github.com/SomeDev-Ru/serializers/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/SomeDev-Ru/serializers/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/SomeDev-Ru/serializers" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a name="serializers" class="anchor" href="#serializers"><span class="octicon octicon-link"></span></a>serializers</h1>
+
+<p>Django compatible serializers</p>
+
+<h2>
+<a name="cursorjson" class="anchor" href="#cursorjson"><span class="octicon octicon-link"></span></a>CursorJSON</h2>
+
+<p>Serialize data without model</p>
+
+<h3>
+<a name="registered" class="anchor" href="#registered"><span class="octicon octicon-link"></span></a>Registered</h3>
+
+<pre><code>from django.core import serializers
+serializers.register_serializer('cursorjson',
+                                'serializers.cursorjson')
+</code></pre>
+
+<h3>
+<a name="uses" class="anchor" href="#uses"><span class="octicon octicon-link"></span></a>Uses</h3>
+
+<p>Example serialize data from PostGIS</p>
+
+<pre><code>...
+response = HttpResponse(content_type='application/json')
+cursor = connections['osm'].cursor()
+cursor.execute("SELECT id, name, ST_AsGeoJSON(ST_Transform(geom,4326)) AS geom FROM osm")
+serializers.serialize('cursorjson', cursor, json=['geom'], stream=response)
+...
+</code></pre>
+
+<h3>
+<a name="params" class="anchor" href="#params"><span class="octicon octicon-link"></span></a>Params</h3>
+
+<p>json - list of fields which contains json object</p>
+
+<h2>
+<a name="featurecollection" class="anchor" href="#featurecollection"><span class="octicon octicon-link"></span></a>FeatureCollection</h2>
+
+<p>Serialize geofields from GeoQuerySet, list, tuple..</p>
+
+<h3>
+<a name="registered-1" class="anchor" href="#registered-1"><span class="octicon octicon-link"></span></a>Registered</h3>
+
+<pre><code>from django.core import serializers
+serializers.register_serializer('featurecollection',
+                                'serializers.featurecollection')
+</code></pre>
+
+<h3>
+<a name="uses-1" class="anchor" href="#uses-1"><span class="octicon octicon-link"></span></a>Uses</h3>
+
+<p>Example serialize data from geomodel</p>
+
+<pre><code>...
+response = HttpResponse(content_type='application/json')
+serializers.serialize('cursorjson', City.objects.all(), 
+                      fields=['point','poly'], stream=response)
+...
+</code></pre>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
