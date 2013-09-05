@@ -35,7 +35,11 @@ Serialize geofields from GeoQuerySet, list, tuple..
 ###Registered
 ```
 from django.core import serializers
-serializers.register_serializer('featurecollection','serializers.featurecollection')
+serializers.register_serializer('geojson','serializers.featurecollection')
+```
+or in settings.py:
+```
+SERIALIZATION_MODULES = { 'geojson' : 'serializers.featurecollection' }
 ```
 
 ###Uses
@@ -43,6 +47,13 @@ Example serialize data from geomodel
 ```
 ...
 response = HttpResponse(content_type='application/json')
-serializers.serialize('cursorjson', City.objects.all(), fields=['point','poly'], stream=response)
+serializers.serialize('geojson', City.objects.all(), fields=['point','poly'], stream=response)
 ...
 ```
+
+###Params
+fields - list of geometry fields (for serilize geometry only)
+geometry - geometry field into feature
+geometry_collection - list of geometry fields (multigeometry for feature)
+properties - list of filelds (properties for feature)
+
