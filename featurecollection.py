@@ -1,11 +1,11 @@
 
+import json
 try:
     from django.core.serializers.json import DjangoJSONEncoder as Encoder
     from django.utils import six
-except:
+except ImportError:
     import six
     Encoder = json.JSONEncoder
-import json
 
 
 class Serializer(object):
@@ -18,7 +18,7 @@ class Serializer(object):
         self.geometry = self.options.pop('geometry', None)
 
         self.stream = options.pop("stream", six.StringIO())
-        self.selected_fields = options.pop("fields", None)
+        self.selected_fields = options.pop("fields", ())
         self.use_natural_keys = options.pop("use_natural_keys", False)
 
         self.start_serialization()
