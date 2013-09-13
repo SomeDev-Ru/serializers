@@ -26,8 +26,6 @@ class Serializer(object):
         for obj in queryset:
             self.start_object(obj)
             self.end_object(obj)
-            if self.first:
-                self.first = False
         self.end_serialization()
         return self.getvalue()
 
@@ -43,15 +41,17 @@ class Serializer(object):
 
     def end_object(self, obj):
         for field in self.selected_fields:
-            if not self.first:
-                self.stream.write(",")
-            self.stream.write(getattr(obj,field).geojson)
-            self.first = False
+            geom = getattr(obj,field)
+            if geom is not None:
+                if not self.first:
+                    self.stream.write(",")
+                self.stream.write(geom.geojson)
+                self.first = False
         if self.geometry is None and len(self.geometry_collections)==0:
             return
         if not self.first:
             self.stream.write(",")
-        self.stream.write('{"type": "Feature",')
+        self.stream.write('{"type":"Feature",')
         self.first = True
         self.rend_geometry()
         self.rend_prop()
@@ -66,10 +66,11 @@ class Serializer(object):
         for prop in self.properties:
             if not self.first:
                 self.stream.write(",")
-            self.stream.write('"%s":' % (prop,))
-            json.dump(getattr(self._current,prop), self.stream,
-                  cls=Encoder, **self.json_kwargs)
-            self.first = False
+            if hasattr(self._current,prop):
+                self.stream.write('"%s":' % (prop,))
+                json.dump(getattr(self._current,prop), self.stream,
+                      cls=Encoder, **self.json_kwargs)
+                self.first = False
         self.first = False
         self.stream.write("}")
     
@@ -78,16 +79,22 @@ class Serializer(object):
             self.stream.write(",")
         self.stream.write('"geometry":')
         if self.geometry is not None:
-            self.stream.write(getattr(self._current,self.geometry).geojson)
+            geom = getattr(self._current,self.geometry)
+            if geom is not None:
+                self.stream.write(geom.geojson)
+            else:
+                self.stream.write('null')
             self.first = False
             return
         self.stream.write('{"type":"GeometryCollection","geometries":[')
         self.first = True
         for geom in self.geometry_collections:
-            if not self.first:
-                self.stream.write(",")
-            self.stream.write(getattr(self._current,geom).geojson)
-            self.first = False
+            geom = getattr(self._current,geom)
+            if geom is not None:
+                if not self.first:
+                    self.stream.write(",")
+                self.stream.write(geom.geojson)
+                self.first = False
         self.first = False
         self.stream.write("]}")
         
