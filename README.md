@@ -27,6 +27,9 @@ serializers.serialize('cursorjson', cursor, json=['geom'], stream=response)
 ###Params
 json - list of fields which contains json object
 
+primary - name for primary key (default "id"). If primary=None returns array of objects. If primary="id" then object {id:object,id:object..}
+
+
 
 FeatureCollection
 -------------

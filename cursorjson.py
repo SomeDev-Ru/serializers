@@ -15,6 +15,7 @@ class Serializer(object):
         self.stream = options.pop("stream", six.StringIO())
         self.selected_fields = options.pop("fields", None)
         self.json_keys = options.pop("json", None)
+        self.primary = options.pop("primary", 'id')
         self.use_natural_keys = options.pop("use_natural_keys", False)
 
         self.start_serialization()
@@ -35,13 +36,17 @@ class Serializer(object):
         self.json_kwargs = self.options.copy()
         self.json_kwargs.pop('stream', None)
         self.json_kwargs.pop('fields', None)
-        self.stream.write("{")
+        if self.primary is None:
+            self.stream.write("[")
+        else:
+            self.stream.write("{")
 
     def gen_kv(self, obj):
         self.first = True
+        first = 0 if self.primary is None else 1
         try:
             for i in range(len(self.cols)):
-                yield (self.cols[i+1],obj[i+1])
+                yield (self.cols[first+i],obj[first+i])
                 self.first = False
         except IndexError:
             yield None
@@ -52,7 +57,10 @@ class Serializer(object):
     def end_object(self, obj):
         if not self.first:
             self.stream.write(",")
-        self.stream.write('"%i":{' % obj[0])
+        if self.primary is None:
+            self.stream.write('{')
+        else:
+            self.stream.write('"%i":{' % obj[0])
         for i in self.gen_kv(obj):
             if i is None:
                 break
@@ -69,7 +77,10 @@ class Serializer(object):
         self._current = None
 
     def end_serialization(self):
-        self.stream.write("}")
+        if self.primary is None:
+            self.stream.write("]")
+        else:
+            self.stream.write("}")
 
     def getvalue(self):
         pass
