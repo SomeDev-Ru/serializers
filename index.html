@@ -42,8 +42,7 @@
 <a name="registered" class="anchor" href="#registered"><span class="octicon octicon-link"></span></a>Registered</h3>
 
 <pre><code>from django.core import serializers
-serializers.register_serializer('cursorjson',
-                                'serializers.cursorjson')
+serializers.register_serializer('cursorjson','serializers.cursorjson')
 </code></pre>
 
 <h3>
@@ -64,6 +63,8 @@ serializers.serialize('cursorjson', cursor, json=['geom'], stream=response)
 
 <p>json - list of fields which contains json object</p>
 
+<p>primary - name for primary key (default "id"). If primary=None returns array of objects. If primary="id" then object {id:object,id:object..}</p>
+
 <h2>
 <a name="featurecollection" class="anchor" href="#featurecollection"><span class="octicon octicon-link"></span></a>FeatureCollection</h2>
 
@@ -73,8 +74,12 @@ serializers.serialize('cursorjson', cursor, json=['geom'], stream=response)
 <a name="registered-1" class="anchor" href="#registered-1"><span class="octicon octicon-link"></span></a>Registered</h3>
 
 <pre><code>from django.core import serializers
-serializers.register_serializer('featurecollection',
-                                'serializers.featurecollection')
+serializers.register_serializer('geojson','serializers.featurecollection')
+</code></pre>
+
+<p>or in settings.py:</p>
+
+<pre><code>SERIALIZATION_MODULES = { 'geojson' : 'serializers.featurecollection' }
 </code></pre>
 
 <h3>
@@ -84,10 +89,20 @@ serializers.register_serializer('featurecollection',
 
 <pre><code>...
 response = HttpResponse(content_type='application/json')
-serializers.serialize('cursorjson', City.objects.all(), 
-                      fields=['point','poly'], stream=response)
+serializers.serialize('geojson', City.objects.all(), fields=['point','poly'], stream=response)
 ...
 </code></pre>
+
+<h3>
+<a name="params-1" class="anchor" href="#params-1"><span class="octicon octicon-link"></span></a>Params</h3>
+
+<p>fields - list of geometry fields (for serialize geometry only)</p>
+
+<p>geometry - geometry field into feature</p>
+
+<p>geometry_collection - list of geometry fields (multigeometry for feature)</p>
+
+<p>properties - list of fields (properties for feature)</p>
       </section>
     </div>
 
