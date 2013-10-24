@@ -1,19 +1,21 @@
 
 import json
 try:
-    from django.core.serializers.json import DjangoJSONEncoder as Encoder
+    from django.core.serializers.json import DjangoJSONEncoder as JSONEncoder
     from django.utils import six
 except ImportError:
     import six
-    Encoder = json.JSONEncoder
+    JSONEncoder = json.JSONEncoder
 
 
 class Serializer(object):
     
+    internal_use_only = False
+    
     def serialize(self, queryset, **options):
         self.options = options
         self.properties = self.options.pop('properties', ())
-        self.kv = self.options.pop('kv',{})
+        self.kv = self.options.pop('kv', {})
         self.geometry_collections = self.options.pop('geometry_collections', ())
         self.geometry = self.options.pop('geometry', None)
 
@@ -41,13 +43,13 @@ class Serializer(object):
 
     def end_object(self, obj):
         for field in self.selected_fields:
-            geom = getattr(obj,field)
+            geom = getattr(obj, field)
             if geom is not None:
                 if not self.first:
                     self.stream.write(",")
                 self.stream.write(geom.geojson)
                 self.first = False
-        if self.geometry is None and len(self.geometry_collections)==0:
+        if self.geometry is None and len(self.geometry_collections) == 0:
             return
         if not self.first:
             self.stream.write(",")
@@ -66,9 +68,9 @@ class Serializer(object):
         for prop in self.properties:
             if not self.first:
                 self.stream.write(",")
-            if hasattr(self._current,prop):
+            if hasattr(self._current, prop):
                 self.stream.write('"%s":' % (prop,))
-                json.dump(getattr(self._current,prop), self.stream,
+                json.dump(getattr(self._current, prop), self.stream,
                       cls=Encoder, **self.json_kwargs)
                 self.first = False
         self.first = False
@@ -79,7 +81,7 @@ class Serializer(object):
             self.stream.write(",")
         self.stream.write('"geometry":')
         if self.geometry is not None:
-            geom = getattr(self._current,self.geometry)
+            geom = getattr(self._current, self.geometry)
             if geom is not None:
                 self.stream.write(geom.geojson)
             else:
@@ -89,7 +91,7 @@ class Serializer(object):
         self.stream.write('{"type":"GeometryCollection","geometries":[')
         self.first = True
         for geom in self.geometry_collections:
-            geom = getattr(self._current,geom)
+            geom = getattr(self._current, geom)
             if geom is not None:
                 if not self.first:
                     self.stream.write(",")
@@ -101,12 +103,20 @@ class Serializer(object):
 
     def end_serialization(self):
         self.stream.write("]")
-        for k,v in self.kv.items():
+        for k, v in self.kv.items():
             if not self.first:
                 self.stream.write(",")
-            self.stream.write('"%s":%s' % (k,json.dumps(v)))
+            self.stream.write('"%s":%s' % (k, json.dumps(v)))
             self.first = False
         self.stream.write("}")
 
     def getvalue(self):
         pass
+
+
+class Encoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, set):
+            return str(o)
+        else:
+            return super(Encoder, self).default(o)

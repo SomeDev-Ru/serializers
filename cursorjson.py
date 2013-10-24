@@ -5,6 +5,8 @@ import six
 
 class Serializer(object):
     
+    internal_use_only = False
+    
     def serialize(self, cursor, **options):
         """
         Serialize a cursor.
