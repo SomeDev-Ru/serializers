@@ -12,13 +12,26 @@ class Serializer(object):
     
     internal_use_only = False
     
+    @staticmethod
+    def hasattr2(s,attr):
+        if isinstance(s, dict):
+            return s.has_key(attr)
+        return hasattr(s,attr)
+    
+    @staticmethod
+    def getattr2(s,attr):
+        if isinstance(s, dict):
+            return s[attr]
+        return getattr(s,attr)
+    
     def serialize(self, queryset, **options):
         self.options = options
         self.properties = self.options.pop('properties', ())
         self.kv = self.options.pop('kv', {})
-        self.geometry_collections = self.options.pop('geometry_collections', ())
+        self.geometry_collection = self.options.pop('geometry_collection', ())
+        if len(self.geometry_collection) == 0: 
+            self.geometry_collection = self.options.pop('geometry_collections', ()) # Deprecated
         self.geometry = self.options.pop('geometry', None)
-
         self.stream = options.pop("stream", six.StringIO())
         self.selected_fields = options.pop("fields", ())
         self.use_natural_keys = options.pop("use_natural_keys", False)
@@ -49,7 +62,7 @@ class Serializer(object):
                     self.stream.write(",")
                 self.stream.write(geom.geojson)
                 self.first = False
-        if self.geometry is None and len(self.geometry_collections) == 0:
+        if self.geometry is None and len(self.geometry_collection) == 0 and len(self.properties) == 0:
             return
         if not self.first:
             self.stream.write(",")
@@ -61,25 +74,30 @@ class Serializer(object):
         self._current = None
     
     def rend_prop(self):
+        if len(self.properties) == 0:
+            return
         if not self.first:
             self.stream.write(",")
         self.stream.write('"properties":{')
         self.first = True
         for prop in self.properties:
-            if not self.first:
-                self.stream.write(",")
-            if hasattr(self._current, prop):
+            if self.hasattr2(self._current, prop):
+                if not self.first:
+                    self.stream.write(",")
                 self.stream.write('"%s":' % (prop,))
-                json.dump(getattr(self._current, prop), self.stream,
+                json.dump(self.getattr2(self._current, prop), self.stream,
                       cls=Encoder, **self.json_kwargs)
                 self.first = False
         self.first = False
         self.stream.write("}")
     
     def rend_geometry(self):
-        if not self.first:
-            self.stream.write(",")
-        self.stream.write('"geometry":')
+        if self.geometry is not None or len(self.geometry_collection) != 0:
+            if not self.first:
+                self.stream.write(",")
+            self.stream.write('"geometry":')
+        else:
+            return
         if self.geometry is not None:
             geom = getattr(self._current, self.geometry)
             if geom is not None:
@@ -88,9 +106,11 @@ class Serializer(object):
                 self.stream.write('null')
             self.first = False
             return
+        if len(self.geometry_collection) == 0:
+            return
         self.stream.write('{"type":"GeometryCollection","geometries":[')
         self.first = True
-        for geom in self.geometry_collections:
+        for geom in self.geometry_collection:
             geom = getattr(self._current, geom)
             if geom is not None:
                 if not self.first:
@@ -111,12 +131,15 @@ class Serializer(object):
         self.stream.write("}")
 
     def getvalue(self):
-        pass
+        if callable(getattr(self.stream, 'getvalue', None)):
+            return self.stream.getvalue()
 
 
 class Encoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, set):
             return str(o)
+        elif callable(getattr(o, '__unicode__', getattr(o, '__str__', None))):
+            return getattr(o, '__unicode__', getattr(o, '__str__', None))()
         else:
             return super(Encoder, self).default(o)
