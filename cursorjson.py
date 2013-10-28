@@ -16,7 +16,7 @@ class Serializer(object):
 
         self.stream = options.pop("stream", six.StringIO())
         self.selected_fields = options.pop("fields", None)
-        self.json_keys = options.pop("json", None)
+        self.json_keys = options.pop("json", ())
         self.primary = options.pop("primary", 'id')
         self.use_natural_keys = options.pop("use_natural_keys", False)
 
